@@ -262,7 +262,7 @@
             justify-content: center;
             align-items: center;
             height: 100%;
-            min-height: 66px; /* 确保与行高一致 */
+            min-height: 66px;
         }
         .footer-buttons {
             display: flex;
@@ -374,6 +374,43 @@
             margin: 0;
         }
         
+        /* 移动端表格样式 */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 通知消息样式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.success {
+            border-left: 4px solid #2ecc71;
+        }
+        .notification.error {
+            border-left: 4px solid #e74c3c;
+        }
+        .notification.warning {
+            border-left: 4px solid #f39c12;
+        }
+        
         @media (max-width: 1100px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -388,6 +425,7 @@
             }
             table {
                 font-size: 13px;
+                min-width: 700px;
             }
             th, td {
                 padding: 12px 8px;
@@ -397,7 +435,7 @@
                 font-size: 13px;
             }
             .summary-content {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
             }
             .main-actions {
                 flex-direction: column;
@@ -421,6 +459,20 @@
                 height: 40px;
                 padding: 8px 12px;
             }
+            
+            /* 移动端表格标题调整 */
+            th {
+                white-space: nowrap;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .summary-content {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
         }
     </style>
 </head>
@@ -435,6 +487,9 @@
             <button class="btn btn-warning" onclick="document.getElementById('fileInput').click()">
                 <i class="fas fa-file-import"></i> 从Excel导入
                 <input type="file" id="fileInput" style="display:none" accept=".xlsx,.xls" onchange="importFromExcel(event)">
+            </button>
+            <button class="btn btn-primary" onclick="loadData()">
+                <i class="fas fa-download"></i> 加载数据
             </button>
         </div>
         
@@ -470,23 +525,25 @@
                 </div>
             </div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th>序号</th>
-                        <th>投注金额</th>
-                        <th>赔率</th>
-                        <th>赛果</th>
-                        <th>截止上轮总投注金额</th>
-                        <th>本轮纯盈利</th>
-                        <th>截止本轮总盈利金额</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="bets-container">
-                    <!-- 投注轮次将通过JS动态添加 -->
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>投注金额</th>
+                            <th>赔率</th>
+                            <th>赛果</th>
+                            <th>截止上轮总投注金额</th>
+                            <th>本轮纯盈利</th>
+                            <th>截止本轮总盈利金额</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bets-container">
+                        <!-- 投注轮次将通过JS动态添加 -->
+                    </tbody>
+                </table>
+            </div>
             
             <div class="main-actions">
                 <button class="btn btn-success main-btn" onclick="addNewBet()">
@@ -494,6 +551,9 @@
                 </button>
                 <button class="btn btn-primary main-btn" onclick="saveData()">
                     <i class="fas fa-save"></i> 保存数据
+                </button>
+                <button class="btn btn-danger main-btn" onclick="clearAllData()">
+                    <i class="fas fa-trash"></i> 清除所有数据
                 </button>
             </div>
         </div>
@@ -518,14 +578,52 @@
     </div>
     
     <div class="page-footer">
-        Copyright © 2025-2060 Monson All Rights Reserved. | 高级投注盈利计算器 v2.0
+        Copyright © 2025-2060 Monson All Rights Reserved. | 高级投注盈利计算器 v2.1
     </div>
     
     <div class="copyright">Monson制作 | 高级版</div>
 
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-message"></span>
+    </div>
+
     <script>
         // 存储所有投注数据
         let bets = [];
+        
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageEl = document.getElementById('notification-message');
+            const icon = notification.querySelector('i');
+            
+            // 设置消息和图标
+            messageEl.textContent = message;
+            
+            // 移除所有类型类
+            notification.classList.remove('success', 'error', 'warning');
+            
+            // 添加正确的类型类
+            notification.classList.add(type);
+            
+            // 更新图标
+            if (type === 'success') {
+                icon.className = 'fas fa-check-circle';
+            } else if (type === 'error') {
+                icon.className = 'fas fa-exclamation-circle';
+            } else if (type === 'warning') {
+                icon.className = 'fas fa-exclamation-triangle';
+            }
+            
+            // 显示通知
+            notification.classList.add('show');
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
         
         // 添加新投注
         function addNewBet() {
@@ -536,7 +634,7 @@
             }
             
             bets.push({
-                id: Date.now() + Math.random(),
+                id: 'bet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 amount: '',
                 odds: defaultOdds, // 设置默认赔率
                 result: 'pending',
@@ -544,18 +642,50 @@
                 cumulativeProfit: 0
             });
             renderBets();
+            showNotification('已添加新的投注轮次', 'success');
         }
         
         // 删除投注轮次
         function deleteBet(betId) {
-            bets = bets.filter(b => b.id !== betId);
-            renderBets();
+            if (confirm('确定要删除这个投注记录吗？此操作不可撤销。')) {
+                bets = bets.filter(b => b.id !== betId);
+                renderBets();
+                showNotification('投注记录已删除', 'success');
+            }
+        }
+        
+        // 清除所有数据
+        function clearAllData() {
+            if (confirm('确定要清除所有数据吗？此操作不可撤销。')) {
+                bets = [];
+                localStorage.removeItem('bettingCalculatorData');
+                renderBets();
+                showNotification('所有数据已清除', 'success');
+            }
         }
         
         // 处理输入变化
         function handleInputChange(betId, field, value) {
             const bet = bets.find(b => b.id === betId);
             if (bet) {
+                // 验证输入
+                if (field === 'amount' || field === 'odds') {
+                    if (value && !isValidNumber(value)) {
+                        showNotification('请输入有效的数字', 'error');
+                        return;
+                    }
+                    
+                    if (field === 'amount' && value < 0) {
+                        showNotification('投注金额不能为负数', 'error');
+                        return;
+                    }
+                    
+                    if (field === 'odds' && value < 1) {
+                        showNotification('赔率不能小于1', 'error');
+                        return;
+                    }
+                }
+                
                 bet[field] = value;
                 
                 // 如果是赔率变化，且是第一轮，更新后续轮次的默认赔率
@@ -570,6 +700,11 @@
                 
                 renderBets();
             }
+        }
+        
+        // 验证数字
+        function isValidNumber(value) {
+            return !isNaN(parseFloat(value)) && isFinite(value);
         }
         
         // 计算累计值
@@ -647,7 +782,15 @@
             document.getElementById('suggested-bet').textContent = '¥' + (stats.totalCost > 0 ? (stats.totalCost * 0.05).toFixed(2) : '50.00');
             document.getElementById('max-bet').textContent = '¥' + (stats.totalCost > 0 ? (stats.totalCost * 0.15).toFixed(2) : '150.00');
             document.getElementById('expected-roi').textContent = (stats.netProfit > 0 && stats.totalCost > 0 ? (stats.netProfit / stats.totalCost * 100).toFixed(1) : '0') + '%';
-            document.getElementById('risk-level').textContent = stats.netProfit < 0 ? '高' : (stats.netProfit < stats.totalCost * 0.1 ? '中' : '低');
+            
+            // 根据盈利情况确定风险等级
+            let riskLevel = '低';
+            if (stats.netProfit < 0) {
+                riskLevel = '高';
+            } else if (stats.netProfit < stats.totalCost * 0.1) {
+                riskLevel = '中';
+            }
+            document.getElementById('risk-level').textContent = riskLevel;
             
             // 渲染每个投注
             bets.forEach((bet, index) => {
@@ -688,7 +831,7 @@
                         <div class="input-wrapper">
                             <input type="number" min="0" step="0.01" 
                                 value="${bet.amount}" 
-                                onchange="handleInputChange(${bet.id}, 'amount', this.value)"
+                                onchange="handleInputChange('${bet.id}', 'amount', this.value)"
                                 placeholder="输入金额">
                         </div>
                         ${suggestedHtml}
@@ -697,13 +840,13 @@
                         <div class="input-wrapper">
                             <input type="number" min="1" step="0.01" 
                                 value="${bet.odds}" 
-                                onchange="handleInputChange(${bet.id}, 'odds', this.value)"
+                                onchange="handleInputChange('${bet.id}', 'odds', this.value)"
                                 placeholder="输入赔率">
                         </div>
                     </td>
                     <td>
                         <div class="input-wrapper">
-                            <select onchange="handleInputChange(${bet.id}, 'result', this.value)">
+                            <select onchange="handleInputChange('${bet.id}', 'result', this.value)">
                                 <option value="pending" ${bet.result === 'pending' ? 'selected' : ''}>未开</option>
                                 <option value="win" ${bet.result === 'win' ? 'selected' : ''}>胜</option>
                                 <option value="lose" ${bet.result === 'lose' ? 'selected' : ''}>负</option>
@@ -716,7 +859,7 @@
                         ${bet.cumulativeProfit >= 0 ? '+' : ''}¥${bet.cumulativeProfit.toFixed(2)}
                     </td>
                     <td class="action-cell">
-                        <button class="btn btn-danger btn-sm" onclick="deleteBet(${bet.id})">
+                        <button class="btn btn-danger btn-sm" onclick="deleteBet('${bet.id}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -729,7 +872,7 @@
             if (bets.length === 0) {
                 betsContainer.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: extremePrecision#7f8c8d;">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #7f8c8d;">
                             <i class="fas fa-info-circle" style="font-size: 3rem; margin-bottom: 15px;"></i>
                             <h3>暂无投注记录</h3>
                             <p>点击"添加投注轮次"按钮开始计算</p>
@@ -741,8 +884,13 @@
         
         // 保存数据到localStorage
         function saveData() {
-            localStorage.setItem('bettingCalculatorData', JSON.stringify(bets));
-            alert('数据已成功保存到本地存储！');
+            try {
+                localStorage.setItem('bettingCalculatorData', JSON.stringify(bets));
+                showNotification('数据已成功保存到本地存储！', 'success');
+            } catch (e) {
+                showNotification('保存数据失败，可能是存储空间不足', 'error');
+                console.error('保存数据失败:', e);
+            }
         }
         
         // 加载数据
@@ -752,65 +900,71 @@
                 try {
                     bets = JSON.parse(savedData);
                     renderBets();
-                    alert('数据已从本地存储加载成功！');
+                    showNotification('数据已从本地存储加载成功！', 'success');
                 } catch (e) {
                     console.error('加载数据失败:', e);
-                    alert('加载数据失败，数据格式不正确！');
+                    showNotification('加载数据失败，数据格式不正确！', 'error');
                 }
             } else {
-                alert('没有找到保存的数据！');
+                showNotification('没有找到保存的数据！', 'warning');
             }
         }
         
         // 导出到Excel
         function exportToExcel() {
             if (bets.length === 0) {
-                alert('没有数据可导出！');
+                showNotification('没有数据可导出！', 'warning');
                 return;
             }
             
-            // 准备Excel数据
-            const excelData = [
-                ['序号', '投注金额', '赔率', '赛果', '截止上轮总投注金额', '本轮纯盈利', '截止本轮总盈利金额']
-            ];
-            
-            bets.forEach((bet, index) => {
-                const amount = parseFloat(bet.amount) || 0;
-                const odds = parseFloat(bet.odds) || 1;
+            try {
+                // 准备Excel数据
+                const excelData = [
+                    ['序号', '投注金额', '赔率', '赛果', '截止上轮总投注金额', '本轮纯盈利', '截止本轮总盈利金额']
+                ];
                 
-                let netProfit = 0;
-                if (bet.result === 'win') {
-                    netProfit = amount * (odds - 1);
-                } else if (bet.result === 'lose') {
-                    netProfit = -amount;
-                }
+                bets.forEach((bet, index) => {
+                    const amount = parseFloat(bet.amount) || 0;
+                    const odds = parseFloat(bet.odds) || 1;
+                    
+                    let netProfit = 0;
+                    if (bet.result === 'win') {
+                        netProfit = amount * (odds - 1);
+                    } else if (bet.result === 'lose') {
+                        netProfit = -amount;
+                    }
+                    
+                    excelData.push([
+                        index + 1,
+                        amount,
+                        odds,
+                        bet.result === 'win' ? '胜' : (bet.result === 'lose' ? '负' : '未开'),
+                        bet.prevTotalCost,
+                        netProfit,
+                        bet.cumulativeProfit
+                    ]);
+                });
                 
-                excelData.push([
-                    index + 1,
-                    amount,
-                    odds,
-                    bet.result === 'win' ? '胜' : (bet.result === 'lose' ? '负' : '未开'),
-                    bet.prevTotalCost,
-                    netProfit,
-                    bet.cumulativeProfit
-                ]);
-            });
-            
-            // 添加统计行
-            const stats = calculateCumulativeValues();
-            excelData.push([]);
-            excelData.push(['总投注成本', stats.totalCost]);
-            excelData.push(['总盈利金额', stats.totalProfit]);
-            excelData.push(['总纯盈利', stats.netProfit]);
-            excelData.push(['胜率', stats.winRate + '%']);
-            
-            // 创建工作簿
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(excelData);
-            XLSX.utils.book_append_sheet(wb, ws, "投注记录");
-            
-            // 导出Excel
-            XLSX.writeFile(wb, "投注记录.xlsx");
+                // 添加统计行
+                const stats = calculateCumulativeValues();
+                excelData.push([]);
+                excelData.push(['总投注成本', stats.totalCost]);
+                excelData.push(['总盈利金额', stats.totalProfit]);
+                excelData.push(['总纯盈利', stats.netProfit]);
+                excelData.push(['胜率', stats.winRate + '%']);
+                
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                XLSX.utils.book_append_sheet(wb, ws, "投注记录");
+                
+                // 导出Excel
+                XLSX.writeFile(wb, "投注记录_" + new Date().toISOString().slice(0, 10) + ".xlsx");
+                showNotification('数据已成功导出为Excel文件！', 'success');
+            } catch (e) {
+                console.error('导出失败:', e);
+                showNotification('导出失败，请重试或检查浏览器支持', 'error');
+            }
         }
         
         // 从Excel导入
@@ -863,7 +1017,7 @@
                         prevTotalCost += amount;
                         
                         importedBets.push({
-                            id: Date.now() + Math.random(),
+                            id: 'imported_' + Date.now() + '_' + index,
                             amount: amount.toString(),
                             odds: odds.toString(),
                             result: result,
@@ -874,11 +1028,11 @@
                     
                     bets = importedBets;
                     renderBets();
-                    alert(`成功导入 ${importedBets.length} 条投注记录！`);
+                    showNotification(`成功导入 ${importedBets.length} 条投注记录！`, 'success');
                     
                 } catch (error) {
                     console.error('导入失败:', error);
-                    alert('导入失败，请检查Excel文件格式！');
+                    showNotification('导入失败，请检查Excel文件格式！', 'error');
                 }
                 
                 // 重置文件输入
@@ -891,7 +1045,15 @@
         // 初始化页面
         window.onload = function() {
             // 尝试加载保存的数据
-            loadData();
+            const savedData = localStorage.getItem('bettingCalculatorData');
+            if (savedData) {
+                try {
+                    bets = JSON.parse(savedData);
+                } catch (e) {
+                    console.error('加载保存的数据失败:', e);
+                    bets = [];
+                }
+            }
             renderBets();
         };
     </script>
