@@ -71,6 +71,7 @@
             justify-content: center;
             gap: 12px;
             color: #fff;
+            position: relative;
         }
         
         .tomato-icon {
@@ -80,8 +81,8 @@
         
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+           50% { transform: scale(1.1); }
+           100% { transform: scale(1); }
         }
         
         .main-content {
@@ -690,6 +691,224 @@
             justify-content: center;
             gap: 6px;
         }
+        
+        /* 工作总结弹窗 */
+        .summary-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .summary-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .summary-content {
+            background: rgba(44, 62, 80, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .summary-modal.active .summary-content {
+            transform: translateY(0);
+        }
+        
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .summary-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .close-summary {
+            background: transparent;
+            border: none;
+            color: #ecf0f1;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .close-summary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .summary-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        .summary-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .summary-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .summary-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-skip {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ecf0f1;
+        }
+        
+        .btn-skip:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-save {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #27ae60;
+        }
+        
+        /* 专注记录部分 - 直接显示在主界面中 */
+        .focus-records-section {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .focus-records-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+        
+        .focus-records-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .focus-records-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .focus-record-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        
+        .focus-record-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .record-content {
+            flex: 1;
+        }
+        
+        .record-date {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .record-text {
+            color: #ecf0f1;
+            line-height: 1.5;
+            margin-right: 10px;
+        }
+        
+        .delete-record-btn {
+            background: transparent;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .delete-record-btn:hover {
+            background: rgba(231, 76, 60, 0.2);
+        }
+        
+        .empty-records {
+            text-align: center;
+            padding: 40px 0;
+            color: #7f8c8d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -811,6 +1030,22 @@
             </div>
         </div>
         
+        <!-- 专注记录部分 - 直接显示在主界面中 -->
+        <div class="focus-records-section">
+            <div class="focus-records-header">
+                <i class="fas fa-history fa-lg"></i>
+                <h2>专注记录</h2>
+            </div>
+            
+            <div class="focus-records-list" id="focus-records-list">
+                <div class="empty-records" id="empty-records">
+                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    <p>暂无记录</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">完成专注时间后，您的工作总结将显示在这里</p>
+                </div>
+            </div>
+        </div>
+        
         <footer>
             <p>番茄工作法：25分钟专注工作 + 5分钟休息 | 每4个番茄钟后进行一次长休息</p>
             <div class="copyright">Copyright © 2025-2060 Monson All Rights Reserved</div>
@@ -820,6 +1055,24 @@
     <!-- 右下角制作人标签 -->
     <div class="creator-sign">
         <i class="fas fa-code"></i> Monson制作
+    </div>
+    
+    <!-- 工作总结弹窗 -->
+    <div class="summary-modal" id="summary-modal">
+        <div class="summary-content">
+            <div class="summary-header">
+                <h2><i class="fas fa-pencil-alt"></i> 工作总结</h2>
+                <button class="close-summary" id="close-summary">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p>您刚刚完成了一段专注时间，请简要记录您完成的工作：</p>
+            <textarea class="summary-input" id="summary-input" placeholder="请输入您的工作总结..."></textarea>
+            <div class="summary-buttons">
+                <button class="summary-btn btn-skip" id="skip-summary">跳过</button>
+                <button class="summary-btn btn-save" id="save-summary">保存</button>
+            </div>
+        </div>
     </div>
     
     <div class="notification" id="notification">
@@ -864,6 +1117,17 @@
             const totalTasks = document.getElementById('total-tasks');
             const completedTasks = document.getElementById('completed-tasks');
             
+            // 工作总结元素
+            const summaryModal = document.getElementById('summary-modal');
+            const summaryInput = document.getElementById('summary-input');
+            const saveSummaryBtn = document.getElementById('save-summary');
+            const skipSummaryBtn = document.getElementById('skip-summary');
+            const closeSummaryBtn = document.getElementById('close-summary');
+            
+            // 专注记录元素
+            const focusRecordsList = document.getElementById('focus-records-list');
+            const emptyRecords = document.getElementById('empty-records');
+            
             // 状态变量
             let workDuration = parseInt(workTimeInput.value) * 60;
             let breakDuration = parseInt(breakTimeInput.value) * 60;
@@ -892,8 +1156,9 @@
             
             // 初始化
             updateCountDisplay();
-            updateLastSyncTime(); // 初始化最后校准时间
-            loadTasks(); // 从本地存储加载任务
+            updateLastSyncTime();
+            loadTasks();
+            loadFocusRecords();
             
             // 事件监听
             startBtn.addEventListener('click', startTimer);
@@ -911,6 +1176,11 @@
             taskInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') addTask();
             });
+            
+            // 工作总结事件
+            saveSummaryBtn.addEventListener('click', saveSummary);
+            skipSummaryBtn.addEventListener('click', closeSummaryModal);
+            closeSummaryBtn.addEventListener('click', closeSummaryModal);
             
             // 初始化
             updateNetworkStatus();
@@ -995,6 +1265,111 @@
                 });
                 
                 taskList.appendChild(taskItem);
+            }
+            
+            // 保存工作总结
+            function saveSummary() {
+                const summaryText = summaryInput.value.trim();
+                if (summaryText === '') {
+                    alert('请输入工作总结内容');
+                    return;
+                }
+                
+                // 创建总结对象
+                const summary = {
+                    id: Date.now(),
+                    date: new Date().toLocaleString('zh-CN'),
+                    content: summaryText,
+                    duration: parseInt(workTimeInput.value)
+                };
+                
+                // 从本地存储获取现有总结
+                let summaries = JSON.parse(localStorage.getItem('workSummaries') || '[]');
+                
+                // 添加新总结
+                summaries.push(summary);
+                
+                // 保存回本地存储
+                localStorage.setItem('workSummaries', JSON.stringify(summaries));
+                
+                // 关闭弹窗
+                closeSummaryModal();
+                
+                // 更新专注记录显示
+                loadFocusRecords();
+                
+                // 显示成功消息
+                showNotification('工作总结已保存', '您的工作总结已成功保存到专注记录中');
+            }
+            
+            // 加载专注记录
+            function loadFocusRecords() {
+                const summaries = JSON.parse(localStorage.getItem('workSummaries') || '[]');
+                
+                // 清空记录列表
+                focusRecordsList.innerHTML = '';
+                
+                if (summaries.length === 0) {
+                    focusRecordsList.appendChild(emptyRecords.cloneNode(true));
+                    return;
+                }
+                
+                // 按日期倒序排列，只显示最近5条
+                summaries.reverse().slice(0, 5).forEach(summary => {
+                    const recordItem = document.createElement('div');
+                    recordItem.className = 'focus-record-item';
+                    recordItem.dataset.id = summary.id;
+                    recordItem.innerHTML = `
+                        <div class="record-content">
+                            <div class="record-date">
+                                <i class="far fa-clock"></i> ${summary.date}
+                            </div>
+                            <div class="record-text">
+                                ${summary.content}
+                            </div>
+                        </div>
+                        <button class="delete-record-btn">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    
+                    // 添加删除按钮事件
+                    const deleteBtn = recordItem.querySelector('.delete-record-btn');
+                    deleteBtn.addEventListener('click', () => {
+                        deleteRecord(summary.id);
+                    });
+                    
+                    focusRecordsList.appendChild(recordItem);
+                });
+            }
+            
+            // 删除记录
+            function deleteRecord(id) {
+                let summaries = JSON.parse(localStorage.getItem('workSummaries') || '[]');
+                
+                // 过滤掉要删除的记录
+                summaries = summaries.filter(summary => summary.id !== id);
+                
+                // 保存回本地存储
+                localStorage.setItem('workSummaries', JSON.stringify(summaries));
+                
+                // 更新显示
+                loadFocusRecords();
+                
+                // 显示删除成功消息
+                showNotification('记录已删除', '专注记录已成功删除');
+            }
+            
+            // 打开工作总结弹窗
+            function openSummaryModal() {
+                summaryModal.classList.add('active');
+                summaryInput.focus();
+            }
+            
+            // 关闭工作总结弹窗
+            function closeSummaryModal() {
+                summaryModal.classList.remove('active');
+                summaryInput.value = '';
             }
             
             // 更新最后校准时间显示
@@ -1197,6 +1572,11 @@
                     
                     // 发送浏览器通知
                     showBrowserNotification("专注时间结束!", "该休息一下了，站起来活动活动吧！");
+                    
+                    // 打开工作总结弹窗
+                    setTimeout(() => {
+                        openSummaryModal();
+                    }, 1000);
                 } else {
                     notificationTitle.textContent = "休息时间结束!";
                     notificationMessage.textContent = "休息结束，准备开始新的专注时间！";
@@ -1307,7 +1687,10 @@
             }
             
             // 显示通知弹窗
-            function showNotification() {
+            function showNotification(title, message) {
+                if (title) notificationTitle.textContent = title;
+                if (message) notificationMessage.textContent = message;
+                
                 notification.classList.add('show');
                 setTimeout(() => {
                     notification.classList.remove('show');
