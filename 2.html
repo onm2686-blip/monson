@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>番茄时钟(Monson定制版)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e74c3c;
+            --primary-dark: #c0392b;
+            --secondary: #3498db;
+            --secondary-dark: #2980b9;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --test: #9b59b6;
+            --todo: #1abc9c;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--light);
+            transition: background-color 0.5s;
+            position: relative;
+        }
+        
+        .container {
+            background: rgba(44, 62, 80, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 1000px;
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        header {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: #fff;
+            position: relative;
+        }
+        
+        .tomato-icon {
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+           50% { transform: scale(1.1); }
+           100% { transform: scale(1); }
+        }
+        
+        .main-content {
+            display: flex;
+            padding: 20px;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .pomodoro-section {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .todo-section {
+            flex: 1;
+            min-width: 400px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            min-width: 100px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--success);
+        }
+        
+        .timer-container {
+            padding: 30px 15px;
+            text-align: center;
+            position: relative;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+        }
+        
+        /* 时间放大重点突出 */
+        .timer-display {
+            font-size: 5.5rem;
+            font-weight: 700;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 15px rgba(231, 76, 60, 0.7);
+            letter-spacing: 5px;
+            transition: transform 0.3s ease;
+            color: #fff;
+        }
+        
+        .timer-display.zoom {
+            transform: scale(1.05);
+        }
+        
+        /* 模式指示器可点击 */
+        .mode-indicator {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: var(--primary);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+            user-select: none;
+            color: white;
+        }
+        
+        .mode-indicator:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        }
+        
+        .mode-indicator.break {
+            background: var(--secondary);
+        }
+        
+        .mode-indicator.break:hover {
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+        
+        /* 四个按钮两行两列布局 */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .btn {
+            padding: 12px 5px;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(3px);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--secondary-dark);
+        }
+        
+        .btn-test {
+            background: var(--test);
+            color: white;
+        }
+        
+        .btn-test:hover {
+            background: #8e44ad;
+        }
+        
+        .settings {
+            padding: 20px 15px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .setting-label {
+            font-size: 1rem;
+            color: #ecf0f1;
+        }
+        
+        .setting-input {
+            width: 90px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+        
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .notification-panel {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            margin-top: auto;
+            text-align: center;
+        }
+        
+        .notification-text {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            color: #ecf0f1;
+        }
+        
+        .time-sync {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: var(--dark);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+            max-width: 90%;
+        }
+        
+        @keyframes slideIn {
+            from { top: -100px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+        
+        .notification.show {
+            display: block;
+        }
+        
+        .notification-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .flash {
+            animation: flash 0.5s infinite;
+        }
+        
+        @keyframes flash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: var(--primary); }
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s linear;
+        }
+        
+        .break .progress {
+            background: var(--secondary);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 版权信息样式 */
+        .copyright {
+            font-size: 0.7rem;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+        
+        /* 网络状态面板 */
+        .status-panel {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.15);
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+        
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .status-label {
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+        
+        .status-value {
+            font-weight: bold;
+            color: var(--success);
+            font-size: 0.9rem;
+        }
+        
+        .offline .status-value {
+            color: var(--primary);
+        }
+        
+        .test-alert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #9b59b6;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            z-index: 2000;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .test-alert.show {
+            transform: translateY(0);
+        }
+        
+        .permission-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            text-align: center;
+            color: #ecf0f1;
+        }
+        
+        .permission-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        /* To-Do List 样式 */
+        .todo-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--todo);
+        }
+        
+        .todo-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .todo-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        #task-input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            border: 2px solid transparent;
+        }
+        
+        #task-input:focus {
+            outline: none;
+            border-color: var(--todo);
+        }
+        
+        #add-task-btn {
+            background: var(--todo);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        #add-task-btn:hover {
+            background: #16a085;
+        }
+        
+        .tasks-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .task-checkbox {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .task-text {
+            flex: 1;
+            font-size: 1rem;
+            transition: all 0.3s;
+            color: #ecf0f1;
+        }
+        
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+        
+        .delete-task-btn {
+            background: transparent;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .delete-task-btn:hover {
+            background: rgba(231, 76, 60, 0.2);
+        }
+        
+        .empty-tasks {
+            text-align: center;
+            padding: 30px 0;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .task-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+            color: #ecf0f1;
+        }
+        
+        .task-count {
+            color: var(--todo);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .pomodoro-section, .todo-section {
+                min-width: 100%;
+            }
+            
+            .timer-display {
+                font-size: 4rem;
+            }
+            
+            .btn {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .timer-display {
+                font-size: 3rem;
+            }
+            
+            .controls {
+                gap: 8px;
+            }
+            
+            .setting-input {
+                width: 80px;
+            }
+            
+            .mode-indicator {
+                font-size: 0.9rem;
+                padding: 6px 15px;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        /* 右下角制作人标签 */
+        .creator-sign {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            z-index: 100;
+            user-select: none;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            animation: fadeInSlide 1.2s ease-out forwards;
+            opacity: 0;
+            transform: translateX(20px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .creator-sign:hover {
+            background: rgba(44, 62, 80, 0.8);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+        
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* 本地存储状态提示 */
+        .storage-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            text-align: center;
+            color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        /* 工作总结弹窗 */
+        .summary-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .summary-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .summary-content {
+            background: rgba(44, 62, 80, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .summary-modal.active .summary-content {
+            transform: translateY(0);
+        }
+        
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .summary-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .close-summary {
+            background: transparent;
+            border: none;
+            color: #ecf0f1;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .close-summary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .summary-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        .summary-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .summary-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .summary-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-skip {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ecf0f1;
+        }
+        
+        .btn-skip:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-save {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #27ae60;
+        }
+        
+        /* 专注记录部分 - 直接显示在主界面中 */
+        .focus-records-section {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .focus-records-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+        
+        .focus-records-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .focus-records-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .focus-record-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        
+        .focus-record-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .record-content {
+            flex: 1;
+        }
+        
+        .record-date {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .record-text {
+            color: #ecf0f1;
+            line-height: 1.5;
+            margin-right: 10px;
+        }
+        
+        .delete-record-btn {
+            background: transparent;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .delete-record-btn:hover {
+            background: rgba(231, 76, 60, 0.2);
+        }
+        
+        .empty-records {
+            text-align: center;
+            padding: 40px 0;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-alert" id="test-alert">正在测试通知功能...</div>
+    
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-clock tomato-icon"></i> 番茄时钟(Monson定制版)</h1>
+            <p>高效工作，放松休息</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">今日番茄</div>
+                <div class="stat-value" id="today-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">总番茄</div>
+                <div class="stat-value" id="total-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">完成任务</div>
+                <div class="stat-value" id="tasks-completed">0</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 番茄时钟模块 -->
+            <div class="pomodoro-section">
+                <div class="timer-container">
+                    <div class="mode-indicator" id="mode-indicator">专注时间</div>
+                    <div class="timer-display" id="timer">25:00</div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    
+                    <!-- 四个按钮两行两列布局 -->
+                    <div class="controls">
+                        <button class="btn btn-primary" id="start-btn">
+                            <i class="fas fa-play"></i> 开始
+                        </button>
+                        <button class="btn btn-warning" id="pause-btn" disabled>
+                            <i class="fas fa-pause"></i> 暂停
+                        </button>
+                        <button class="btn btn-secondary" id="reset-btn">
+                            <i class="fas fa-redo"></i> 重置
+                        </button>
+                        <button class="btn btn-test" id="test-btn">
+                            <i class="fas fa-bell"></i> 测试
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="settings">
+                    <div class="setting-row">
+                        <span class="setting-label">专注时间 (分钟):</span>
+                        <input type="number" min="1" max="120" value="25" class="setting-input" id="work-time">
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">休息时间 (分钟):</span>
+                        <input type="number" min="1" max="60" value="5" class="setting-input" id="break-time">
+                    </div>
+                </div>
+                
+                <div class="notification-panel">
+                    <div class="notification-text">
+                        网页切到后台后仍可自动校准时间，确保计时准确
+                    </div>
+                    <div class="time-sync" id="sync-status">
+                        <i class="fas fa-sync-alt"></i> 时间已同步
+                    </div>
+                    
+                    <div class="status-panel" id="status-panel">
+                        <div class="status-item" id="network-status">
+                            <span class="status-label">网络状态</span>
+                            <span class="status-value">在线</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">最后校准</span>
+                            <span class="status-value" id="last-sync">--:--:--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-info" id="permission-info">
+                        <i class="fas fa-info-circle"></i> 通知功能状态: 
+                        <span id="notification-status">未请求</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- To-Do List模块 - 并列显示 -->
+            <div class="todo-section">
+                <div class="todo-header">
+                    <i class="fas fa-tasks fa-lg"></i>
+                    <h2>今日任务</h2>
+                    <span id="date-display" class="date-display"></span>
+                </div>
+                
+                <div class="todo-input-container">
+                    <input type="text" id="task-input" placeholder="添加新任务...">
+                    <button id="add-task-btn"><i class="fas fa-plus"></i></button>
+                </div>
+                
+                <div class="tasks-container">
+                    <ul class="task-list" id="task-list">
+                        <!-- 任务列表将由JavaScript动态生成 -->
+                    </ul>
+                </div>
+                
+                <div class="task-stats">
+                    <div>总任务: <span class="task-count" id="total-tasks">0</span></div>
+                    <div>已完成: <span class="task-count" id="completed-tasks">0</span></div>
+                </div>
+                
+                <div class="storage-info" id="storage-info">
+                    <i class="fas fa-save"></i> 任务已自动保存
+                </div>
+            </div>
+        </div>
+        
+        <!-- 专注记录部分 - 直接显示在主界面中 -->
+        <div class="focus-records-section">
+            <div class="focus-records-header">
+                <i class="fas fa-history fa-lg"></i>
+                <h2>专注记录</h2>
+            </div>
+            
+            <div class="focus-records-list" id="focus-records-list">
+                <div class="empty-records" id="empty-records">
+                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    <p>暂无记录</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">完成专注时间后，您的工作总结将显示在这里</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>番茄工作法：25分钟专注工作 + 5分钟休息 | 每4个番茄钟后进行一次长休息</p>
+            <div class="copyright">Copyright © 2025-2060 Monson All Rights Reserved</div>
+        </footer>
+    </div>
+    
+    <!-- 右下角制作人标签 -->
+    <div class="creator-sign">
+        <i class="fas fa-code"></i> Monson制作
+    </div>
+    
+    <!-- 工作总结弹窗 -->
+    <div class="summary-modal" id="summary-modal">
+        <div class="summary-content">
+            <div class="summary-header">
+                <h2><i class="fas fa-pencil-alt"></i> 工作总结</h2>
+                <button class="close-summary" id="close-summary">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p>您刚刚完成了一段专注时间，请简要记录您完成的工作：</p>
+            <textarea class="summary-input" id="summary-input" placeholder="请输入您的工作总结..."></textarea>
+            <div class="summary-buttons">
+                <button class="summary-btn btn-skip" id="skip-summary">跳过</button>
+                <button class="summary-btn btn-save" id="save-summary">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <div class="notification-title">
+            <i class="fas fa-bell"></i>
+            <span id="notification-title">专注时间结束!</span>
+        </div>
+        <div id="notification-message">该休息一下了，站起来活动活动吧！</div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM 元素
+            const timerDisplay = document.getElementById('timer');
+            const startBtn = document.getElementById('start-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const testBtn = document.getElementById('test-btn');
+            const workTimeInput = document.getElementById('work-time');
+            const breakTimeInput = document.getElementById('break-time');
+            const modeIndicator = document.getElementById('mode-indicator');
+            const todayCount = document.getElementById('today-count');
+            const totalCount = document.getElementById('total-count');
+            const tasksCompleted = document.getElementById('tasks-completed');
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationMessage = document.getElementById('notification-message');
+            const progressBar = document.getElementById('progress');
+            const syncStatus = document.getElementById('sync-status');
+            const networkStatus = document.getElementById('network-status');
+            const lastSync = document.getElementById('last-sync');
+            const testAlert = document.getElementById('test-alert');
+            const notificationStatus = document.getElementById('notification-status');
+            const permissionInfo = document.getElementById('permission-info');
+            const dateDisplay = document.getElementById('date-display');
+            const storageInfo = document.getElementById('storage-info');
+            
+            // To-Do List 元素
+            const taskInput = document.getElementById('task-input');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const taskList = document.getElementById('task-list');
+            const totalTasks = document.getElementById('total-tasks');
+            const completedTasks = document.getElementById('completed-tasks');
+            
+            // 工作总结元素
+            const summaryModal = document.getElementById('summary-modal');
+            const summaryInput = document.getElementById('summary-input');
+            const saveSummaryBtn = document.getElementById('save-summary');
+            const skipSummaryBtn = document.getElementById('skip-summary');
+            const closeSummaryBtn = document.getElementById('close-summary');
+            
+            // 专注记录元素
+            const focusRecordsList = document.getElementById('focus-records-list');
+            const emptyRecords = document.getElementById('empty-records');
+            
+            // 状态变量
+            let workDuration = parseInt(workTimeInput.value) * 60;
+            let breakDuration = parseInt(breakTimeInput.value) * 60;
+            let timeLeft = workDuration;
+            let isRunning = false;
+            let isWorkMode = true;
+            let timerId = null;
+            let startTimestamp = 0;
+            let lastSyncTime = Date.now();
+            
+            // 番茄钟计数
+            let todayTomatoes = 0;
+            let totalTomatoes = 0;
+            
+            // 当前日期
+            const today = new Date();
+            const todayDateString = today.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            
+            // 保存原始页面标题
+            const originalTitle = document.title;
+            let titleUpdateInterval = null;
+            
+            // 显示当前日期
+            dateDisplay.textContent = todayDateString;
+            
+            // 初始化
+            updateCountDisplay();
+            updateLastSyncTime();
+            loadTasks();
+            loadFocusRecords();
+            
+            // 事件监听
+            startBtn.addEventListener('click', startTimer);
+            pauseBtn.addEventListener('click', pauseTimer);
+            resetBtn.addEventListener('click', resetTimer);
+            testBtn.addEventListener('click', testNotifications);
+            workTimeInput.addEventListener('change', updateWorkTime);
+            breakTimeInput.addEventListener('change', updateBreakTime);
+            
+            // 模式切换功能
+            modeIndicator.addEventListener('click', toggleMode);
+            
+            // To-Do List 事件
+            addTaskBtn.addEventListener('click', addTask);
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTask();
+            });
+            
+            // 工作总结事件
+            saveSummaryBtn.addEventListener('click', saveSummary);
+            skipSummaryBtn.addEventListener('click', closeSummaryModal);
+            closeSummaryBtn.addEventListener('click', closeSummaryModal);
+            
+            // 初始化
+            updateNetworkStatus();
+            updateTimerDisplay();
+            
+            // 请求通知权限
+            requestNotificationPermission();
+            
+            // 更新浏览器标签页标题显示倒计时
+            function updateTabTitle() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (isWorkMode) {
+                    document.title = `${timeString} - 专注中`;
+                } else {
+                    document.title = `${timeString}`;
+                }
+            }
+            
+            // 开始标签页标题更新
+            function startTabTitleUpdate() {
+                // 先清除可能存在的旧计时器
+                stopTabTitleUpdate();
+                
+                // 立即更新一次
+                updateTabTitle();
+                
+                // 设置每秒更新一次
+                titleUpdateInterval = setInterval(updateTabTitle, 1000);
+            }
+            
+            // 停止标签页标题更新
+            function stopTabTitleUpdate() {
+                if (titleUpdateInterval) {
+                    clearInterval(titleUpdateInterval);
+                    titleUpdateInterval = null;
+                }
+                
+                // 恢复原始标题
+                document.title = originalTitle;
+            }
+            
+            // 保存任务到本地存储
+            function saveTasks() {
+                const tasks = [];
+                document.querySelectorAll('.task-item').forEach(item => {
+                    const text = item.querySelector('.task-text').textContent;
+                    const completed = item.querySelector('.task-checkbox').checked;
+                    tasks.push({ text, completed });
+                });
+                
+                // 保存任务和日期
+                const todoData = {
+                    date: todayDateString,
+                    tasks: tasks
+                };
+                
+                localStorage.setItem('todoList', JSON.stringify(todoData));
+                
+                // 显示保存提示
+                storageInfo.style.display = 'flex';
+                setTimeout(() => {
+                    storageInfo.style.display = 'none';
+                }, 2000);
+            }
+            
+            // 从本地存储加载任务
+            function loadTasks() {
+                const savedData = localStorage.getItem('todoList');
+                if (!savedData) return;
+                
+                const todoData = JSON.parse(savedData);
+                
+                // 检查是否为同一天
+                if (todoData.date !== todayDateString) {
+                    localStorage.removeItem('todoList');
+                    return;
+                }
+                
+                // 清空当前任务列表
+                taskList.innerHTML = '';
+                
+                // 添加任务
+                todoData.tasks.forEach(task => {
+                    addTaskToDOM(task.text, task.completed);
+                });
+                
+                updateTaskStats();
+            }
+            
+            // 添加任务到DOM
+            function addTaskToDOM(text, completed = false) {
+                const taskItem = document.createElement('li');
+                taskItem.className = 'task-item';
+                
+                taskItem.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" ${completed ? 'checked' : ''}>
+                    <span class="task-text ${completed ? 'completed' : ''}">${text}</span>
+                    <button class="delete-task-btn"><i class="fas fa-trash"></i></button>
+                `;
+                
+                const checkbox = taskItem.querySelector('.task-checkbox');
+                const taskTextEl = taskItem.querySelector('.task-text');
+                const deleteBtn = taskItem.querySelector('.delete-task-btn');
+                
+                checkbox.addEventListener('change', () => {
+                    taskTextEl.classList.toggle('completed');
+                    updateTaskStats();
+                    saveTasks();
+                });
+                
+                deleteBtn.addEventListener('click', () => {
+                    taskItem.remove();
+                    updateTaskStats();
+                    saveTasks();
+                });
+                
+                taskList.appendChild(taskItem);
+            }
+            
+            // 保存工作总结
+            function saveSummary() {
+                const summaryText = summaryInput.value.trim();
+                if (summaryText === '') {
+                    alert('请输入工作总结内容');
+                    return;
+                }
+                
+                // 创建总结对象
+                const summary = {
+                    id: Date.now(),
+                    date: new Date().toLocaleString('zh-CN'),
+                    content: summaryText,
+                    duration: parseInt(workTimeInput.value)
+                };
+                
+                // 从本地存储获取现有总结
+                let summaries = JSON.parse(localStorage.getItem('workSummaries') || '[]');
+                
+                // 添加新总结
+                summaries.push(summary);
+                
+                // 保存回本地存储
+                localStorage.setItem('workSummaries', JSON.stringify(summaries));
+                
+                // 关闭弹窗
+                closeSummaryModal();
+                
+                // 更新专注记录显示
+                loadFocusRecords();
+                
+                // 显示成功消息
+                showNotification('工作总结已保存', '您的工作总结已成功保存到专注记录中');
+            }
+            
+            // 加载专注记录
+            function loadFocusRecords() {
+                const summaries = JSON.parse(localStorage.getItem('workSummaries') || '[]');
+                
+                // 清空记录列表
+                focusRecordsList.innerHTML = '';
+                
+                if (summaries.length === 0) {
+                    focusRecordsList.appendChild(emptyRecords.cloneNode(true));
+                    return;
+                }
+                
+                // 按日期倒序排列，只显示最近5条
+                summaries.reverse().slice(0, 5).forEach(summary => {
+                    const recordItem = document.createElement('div');
+                    recordItem.className = 'focus-record-item';
+                    recordItem.dataset.id = summary.id;
+                    recordItem.innerHTML = `
+                        <div class="record-content">
+                            <div class="record-date">
+                                <i class="far fa-clock"></i> ${summary.date}
+                            </div>
+                            <div class="record-text">
+                                ${summary.content}
+                            </div>
+                        </div>
+                        <button class="delete-record-btn">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    
+                    // 添加删除按钮事件
+                    const deleteBtn = recordItem.querySelector('.delete-record-btn');
+                    deleteBtn.addEventListener('click', () => {
+                        deleteRecord(summary.id);
+                    });
+                    
+                    focusRecordsList.appendChild(recordItem);
+                });
+            }
+            
+            // 删除记录
+            function deleteRecord(id) {
+                let summaries = JSON.parse(localStorage.getItem('workSummaries') || '[]');
+                
+                // 过滤掉要删除的记录
+                summaries = summaries.filter(summary => summary.id !== id);
+                
+                // 保存回本地存储
+                localStorage.setItem('workSummaries', JSON.stringify(summaries));
+                
+                // 更新显示
+                loadFocusRecords();
+                
+                // 显示删除成功消息
+                showNotification('记录已删除', '专注记录已成功删除');
+            }
+            
+            // 打开工作总结弹窗
+            function openSummaryModal() {
+                summaryModal.classList.add('active');
+                summaryInput.focus();
+            }
+            
+            // 关闭工作总结弹窗
+            function closeSummaryModal() {
+                summaryModal.classList.remove('active');
+                summaryInput.value = '';
+            }
+            
+            // 更新最后校准时间显示
+            function updateLastSyncTime() {
+                const now = new Date();
+                lastSync.textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            }
+            
+            // 更新计数显示
+            function updateCountDisplay() {
+                todayCount.textContent = todayTomatoes;
+                totalCount.textContent = totalTomatoes;
+                tasksCompleted.textContent = 1; // 示例数据
+            }
+            
+            // 请求通知权限
+            function requestNotificationPermission() {
+                if (!('Notification' in window)) {
+                    notificationStatus.textContent = "浏览器不支持通知";
+                    return;
+                }
+                
+                // 检查是否已经请求过权限
+                const permissionRequested = localStorage.getItem('notificationPermissionRequested');
+                
+                if (permissionRequested) {
+                    // 已经请求过权限，只更新状态显示
+                    updateNotificationStatus();
+                    return;
+                }
+                
+                // 第一次访问，请求权限
+                Notification.requestPermission().then(permission => {
+                    // 标记已请求过权限
+                    localStorage.setItem('notificationPermissionRequested', 'true');
+                    updateNotificationStatus();
+                });
+            }
+            
+            // 更新通知权限状态显示
+            function updateNotificationStatus() {
+                if (!('Notification' in window)) return;
+                
+                switch(Notification.permission) {
+                    case 'granted':
+                        notificationStatus.textContent = "已授予";
+                        notificationStatus.style.color = "#2ecc71";
+                        permissionInfo.innerHTML = '<i class="fas fa-check-circle"></i> 通知权限已授予';
+                        break;
+                    case 'denied':
+                        notificationStatus.textContent = "已拒绝";
+                        notificationStatus.style.color = "#e74c3c";
+                        permissionInfo.innerHTML = `
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            通知权限被拒绝。请<a href="#" onclick="showPermissionHelp()">点击这里</a>查看如何启用通知
+                        `;
+                        break;
+                    default:
+                        notificationStatus.textContent = "未授予";
+                        notificationStatus.style.color = "#f39c12";
+                        permissionInfo.innerHTML = `
+                            <i class="fas fa-info-circle"></i> 
+                            通知权限未授予。请<a href="#" onclick="requestNotificationPermission()">点击这里请求权限</a>
+                        `;
+                }
+            }
+            
+            // 开始计时器
+            function startTimer() {
+                if (!isRunning) {
+                    isRunning = true;
+                    startBtn.disabled = true;
+                    pauseBtn.disabled = false;
+                    workTimeInput.disabled = true;
+                    breakTimeInput.disabled = true;
+                    
+                    // 根据当前模式设置总时间
+                    const totalDuration = isWorkMode ? workDuration : breakDuration;
+                    startTimestamp = Date.now() - (totalDuration - timeLeft) * 1000;
+                    
+                    lastSyncTime = Date.now();
+                    
+                    timerId = setInterval(updateTimer, 100);
+                    
+                    // 启动标签页标题更新
+                    startTabTitleUpdate();
+                    
+                    // 立即更新一次显示
+                    updateTimer();
+                }
+            }
+            
+            // 暂停计时器
+            function pauseTimer() {
+                if (isRunning) {
+                    isRunning = false;
+                    startBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                    clearInterval(timerId);
+                    
+                    // 停止标签页标题更新
+                    stopTabTitleUpdate();
+                }
+            }
+            
+            // 重置计时器
+            function resetTimer() {
+                pauseTimer();
+                timeLeft = isWorkMode ? workDuration : breakDuration;
+                modeIndicator.textContent = isWorkMode ? "专注时间" : "休息时间";
+                modeIndicator.className = isWorkMode ? "mode-indicator" : "mode-indicator break";
+                updateTimerDisplay();
+                progressBar.style.width = "0%";
+                
+                workTimeInput.disabled = false;
+                breakTimeInput.disabled = false;
+            }
+            
+            // 模式切换功能
+            function toggleMode() {
+                // 如果正在运行，先暂停
+                if (isRunning) {
+                    pauseTimer();
+                }
+                
+                // 切换模式
+                isWorkMode = !isWorkMode;
+                
+                // 重置计时器
+                resetTimer();
+            }
+            
+            // 更新计时器
+            function updateTimer() {
+                const currentTime = Date.now();
+                const elapsedSeconds = Math.floor((currentTime - startTimestamp) / 1000);
+                
+                if (isWorkMode) {
+                    timeLeft = workDuration - elapsedSeconds;
+                } else {
+                    timeLeft = breakDuration - elapsedSeconds;
+                }
+                
+                // 更新进度条
+                const totalTime = isWorkMode ? workDuration : breakDuration;
+                const progress = ((totalTime - timeLeft) / totalTime) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                // 添加放大效果
+                if (timeLeft <= 10 && timeLeft > 0) {
+                    timerDisplay.classList.add('zoom');
+                } else {
+                    timerDisplay.classList.remove('zoom');
+                }
+                
+                // 检查是否结束
+                if (timeLeft <= 0) {
+                    clearInterval(timerId);
+                    timeLeft = 0;
+                    
+                    // 停止标签页标题更新
+                    stopTabTitleUpdate();
+                    
+                    // 触发提醒
+                    triggerReminders(isWorkMode ? "工作" : "休息");
+                    
+                    // 切换模式
+                    isWorkMode = !isWorkMode;
+                    modeIndicator.textContent = isWorkMode ? "专注时间" : "休息时间";
+                    modeIndicator.className = isWorkMode ? "mode-indicator" : "mode-indicator break";
+                    
+                    // 重置时间
+                    timeLeft = isWorkMode ? workDuration : breakDuration;
+                    startTimestamp = Date.now();
+                    
+                    // 如果是工作模式，重新启动计时器
+                    if (isWorkMode) {
+                        // 确保UI状态正确更新
+                        startBtn.disabled = false;
+                        pauseBtn.disabled = true;
+                        isRunning = false;
+                        workTimeInput.disabled = false;
+                        breakTimeInput.disabled = false;
+                    } else {
+                        startBtn.disabled = false;
+                        pauseBtn.disabled = true;
+                        isRunning = false;
+                    }
+                }
+                
+                updateTimerDisplay();
+                
+                // 每5秒更新一次最后校准时间
+                if (Date.now() - lastSyncTime > 5000) {
+                    updateLastSyncTime();
+                    lastSyncTime = Date.now();
+                }
+            }
+            
+            // 触发提醒功能
+            function triggerReminders(mode) {
+                // 显示通知
+                if (mode === "工作") {
+                    notificationTitle.textContent = "专注时间结束!";
+                    notificationMessage.textContent = "该休息一下了，站起来活动活动吧！";
+                    todayTomatoes++;
+                    totalTomatoes++;
+                    updateCountDisplay();
+                    
+                    // 发送浏览器通知
+                    showBrowserNotification("专注时间结束!", "该休息一下了，站起来活动活动吧！");
+                    
+                    // 打开工作总结弹窗
+                    setTimeout(() => {
+                        openSummaryModal();
+                    }, 1000);
+                } else {
+                    notificationTitle.textContent = "休息时间结束!";
+                    notificationMessage.textContent = "休息结束，准备开始新的专注时间！";
+                    
+                    // 发送浏览器通知
+                    showBrowserNotification("休息时间结束!", "休息结束，准备开始新的专注时间！");
+                }
+                
+                // 更新最后校准时间
+                updateLastSyncTime();
+                
+                // 显示通知弹窗
+                showNotification();
+            }
+            
+            // 测试通知功能
+            function testNotifications() {
+                // 显示测试提示
+                testAlert.textContent = "正在测试所有通知功能...";
+                testAlert.classList.add('show');
+                
+                // 更新最后校准时间
+                updateLastSyncTime();
+                
+                // 显示测试通知弹窗
+                notificationTitle.textContent = "测试通知!";
+                notificationMessage.textContent = "这是一个测试通知，用于验证提醒功能是否正常工作";
+                showNotification();
+                
+                // 尝试浏览器通知
+                showBrowserNotification("测试通知", "这是一个测试通知，用于验证提醒功能是否正常工作");
+                
+                // 3秒后隐藏测试提示
+                setTimeout(() => {
+                    testAlert.classList.remove('show');
+                }, 3000);
+            }
+            
+            // 显示浏览器通知
+            function showBrowserNotification(title, message) {
+                // 检查浏览器是否支持通知
+                if (!("Notification" in window)) {
+                    console.log("此浏览器不支持桌面通知");
+                    return;
+                }
+                
+                // 检查通知权限
+                if (Notification.permission === "granted") {
+                    // 创建通知
+                    const notification = new Notification(title, {
+                        body: message,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/2917/2917633.png'
+                    });
+                    
+                    // 点击通知时关闭它
+                    notification.onclick = function() {
+                        window.focus();
+                        notification.close();
+                    };
+                } else if (Notification.permission !== "denied") {
+                    // 如果权限未被拒绝，则请求权限
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            new Notification(title, {
+                                body: message,
+                                icon: 'https://cdn-icons-png.flaticon.com/512/2917/2917633.png'
+                            });
+                        }
+                    });
+                }
+            }
+            
+            // 更新计时器显示
+            function updateTimerDisplay() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // 更新工作时间
+            function updateWorkTime() {
+                const newTime = parseInt(workTimeInput.value);
+                if (newTime > 0 && newTime <= 120) {
+                    workDuration = newTime * 60;
+                    if (!isRunning && isWorkMode) {
+                        timeLeft = workDuration;
+                        updateTimerDisplay();
+                    }
+                } else {
+                    workTimeInput.value = 25;
+                    workDuration = 25 * 60;
+                }
+            }
+            
+            // 更新休息时间
+            function updateBreakTime() {
+                const newTime = parseInt(breakTimeInput.value);
+                if (newTime > 0 && newTime <= 60) {
+                    breakDuration = newTime * 60;
+                    if (!isRunning && !isWorkMode) {
+                        timeLeft = breakDuration;
+                        updateTimerDisplay();
+                    }
+                } else {
+                    breakTimeInput.value = 5;
+                    breakDuration = 5 * 60;
+                }
+            }
+            
+            // 显示通知弹窗
+            function showNotification(title, message) {
+                if (title) notificationTitle.textContent = title;
+                if (message) notificationMessage.textContent = message;
+                
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            }
+            
+            // 更新网络状态
+            function updateNetworkStatus() {
+                const isOnline = true; // 模拟在线状态
+                networkStatus.classList.toggle('offline', !isOnline);
+                networkStatus.querySelector('.status-value').textContent = isOnline ? '在线' : '离线';
+            }
+            
+            // To-Do List 功能
+            function addTask() {
+                const taskText = taskInput.value.trim();
+                if (taskText === '') return;
+                
+                addTaskToDOM(taskText);
+                taskInput.value = '';
+                updateTaskStats();
+                saveTasks();
+            }
+            
+            // 初始化任务事件
+            function initTaskEvents() {
+                document.querySelectorAll('.task-item').forEach(item => {
+                    const checkbox = item.querySelector('.task-checkbox');
+                    const taskText = item.querySelector('.task-text');
+                    const deleteBtn = item.querySelector('.delete-task-btn');
+                    
+                    checkbox.addEventListener('change', () => {
+                        taskText.classList.toggle('completed');
+                        updateTaskStats();
+                        saveTasks();
+                    });
+                    
+                    deleteBtn.addEventListener('click', () => {
+                        item.remove();
+                        updateTaskStats();
+                        saveTasks();
+                    });
+                });
+            }
+            
+            function updateTaskStats() {
+                const tasks = document.querySelectorAll('.task-item');
+                const completed = document.querySelectorAll('.task-item .task-checkbox:checked');
+                
+                totalTasks.textContent = tasks.length;
+                completedTasks.textContent = completed.length;
+            }
+            
+            // 显示权限帮助信息
+            window.showPermissionHelp = function() {
+                alert("要启用通知功能：\n1. 点击浏览器地址栏左侧的锁形图标或信息图标\n2. 找到'通知'选项\n3. 将其设置为'允许'\n4. 刷新页面后生效");
+                return false;
+            };
+            
+            // 初始化任务事件监听
+            initTaskEvents();
+        });
+    </script>
+</body>
+</html>
